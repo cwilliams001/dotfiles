@@ -1,0 +1,14 @@
+# Ignore system clutter
+*.swp
+*.swo
+*.swn
+*.bak
+*~
+.nix-profile/
+.result*
+.cache/
+__pycache__/
+.terraform/
+node_modules/
+ssh/config
+

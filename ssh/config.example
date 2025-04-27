@@ -1,0 +1,23 @@
+# ssh/config.example
+#
+# Example SSH configuration for dotfiles setup
+# 
+# Copy this file to ssh/config and customize it for your servers.
+# Your real ssh/config should NOT be committed to git.
+
+# Example server
+Host example-server
+    HostName your.server.ip.or.hostname
+    User your-username
+    IdentityFile ~/.ssh/your-private-key
+    Port 22
+    SetEnv TERM=xterm-256color
+
+# Example second server
+Host another-server
+    HostName another.server.ip
+    User another-user
+    IdentityFile ~/.ssh/another-key
+    Port 22
+    SetEnv TERM=xterm-256color
+

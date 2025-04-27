@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# Enhanced tmux-sessionizer with support for remote sessions and specific directories
+
+# Configuration
+# You can override these by setting them in your .zshrc before this script runs
+TMUX_SESSIONIZER_DIRS="$HOME/github_repos $HOME/dotfiles $HOME/Downloads $HOME/Desktop"
+MAX_DEPTH=${MAX_DEPTH:-3}
+INCLUDE_HIDDEN=${INCLUDE_HIDDEN:-false}
+REMOTE_HOSTS=${REMOTE_HOSTS:-"nix-dev claude-code"}
+
+find_directories() {
+  local search_dirs=($TMUX_SESSIONIZER_DIRS)
+  local valid_dirs=()
+
+  for dir in "${search_dirs[@]}"; do
+    # Skip hidden directories unless INCLUDE_HIDDEN=true
+    if [[ "$INCLUDE_HIDDEN" == "true" || "$(basename "$dir")" != .* ]]; then
+      [[ -d "$dir" ]] && valid_dirs+=("$dir")
+    fi
+  done
+
+  if [ "${#valid_dirs[@]}" -eq 0 ]; then
+    echo "No valid search directories found!" >&2
+    exit 1
+  fi
+
+  # Print top-level dirs
+  for dir in "${valid_dirs[@]}"; do
+    echo "$dir"
+  done
+
+  # Then find subdirectories
+  local find_command=(find "${valid_dirs[@]}" -type d -maxdepth "$MAX_DEPTH")
+
+  if [[ "$INCLUDE_HIDDEN" != "true" ]]; then
+    find_command+=(! -path "*/.*")
+  fi
+
+  "${find_command[@]}" 2>/dev/null |
+    grep -vE '/\\.git(/|$)|node_modules|\\.cache|__pycache__' | sort
+}
+
+# Function to add remote host options
+add_remote_hosts() {
+  local results="$1"
+
+  for host in $REMOTE_HOSTS; do
+    echo "ssh://$host:~"
+  done
+
+  echo "$results"
+}
+
+# Handle direct path argument
+if [[ $# -eq 1 ]]; then
+  selected="$1"
+else
+  # If argument is a partial path, try to match it
+  if [[ $# -gt 0 ]]; then
+    query="$*"
+    results=$(find_directories "$TMUX_SESSIONIZER_DIRS" | grep -i "$query")
+    if [[ -n "$results" ]]; then
+      selected=$(echo "$results" | fzf --height=40% --reverse --prompt="Filtered directories> " --query="$query")
+    else
+      # No match found, default to normal selection
+      all_options=$(add_remote_hosts "$(find_directories "$TMUX_SESSIONIZER_DIRS")")
+      selected=$(echo "$all_options" | fzf --height=40% --reverse --prompt="Select directory> " --query="$query")
+    fi
+  else
+    # Normal selection
+    all_options=$(add_remote_hosts "$(find_directories "$TMUX_SESSIONIZER_DIRS")")
+    selected=$(echo "$all_options" | fzf --height=40% --reverse --prompt="Select directory> ")
+  fi
+fi
+
+# Exit if no selection was made
+if [[ -z "$selected" ]]; then
+  exit 0
+fi
+
+# Handle remote sessions
+if [[ "$selected" == ssh://* ]]; then
+  # Parse SSH URL
+  host=$(echo "$selected" | sed -e 's|ssh://||' -e 's|:.*||')
+  path=$(echo "$selected" | sed -e 's|ssh://[^:]*:||')
+
+  # Normalize path (handle ~ expansion)
+  if [[ "$path" == "~"* ]]; then
+    path_arg="$path"
+  else
+    path_arg="$path"
+  fi
+
+  # Session name based on host and path
+  session_name="$(echo "${host}_$(basename "$path_arg")" | tr '. ' '_')"
+
+  # Connect to remote and create or attach to session
+  if [[ -z "$TMUX" ]]; then
+    # Not in a tmux session, connect directly
+    ssh -t "$host" "cd $path_arg && tmux new-session -A -s $session_name"
+  else
+    # Create window for SSH
+    window_name="${host}:$(basename "$path_arg")"
+    tmux new-window -n "$window_name" "ssh -t $host \"cd $path_arg && tmux new-session -A -s $session_name\""
+  fi
+
+  exit 0
+fi
+
+# Local session handling
+session_name=$(basename "$selected" | tr '. ' '_')
+
+# If tmux server isn't running, start a new session and attach directly
+if [[ -z "$TMUX" && -z $(pgrep tmux) ]]; then
+  exec tmux new-session -s "$session_name" -c "$selected"
+fi
+
+# If the session doesn't exist yet, create it in detached mode
+if ! tmux has-session -t "$session_name" 2>/dev/null; then
+  tmux new-session -d -s "$session_name" -c "$selected"
+fi
+
+# Attach to or switch to the existing session
+if [[ -z "$TMUX" ]]; then
+  tmux attach -t "$session_name"
+else
+  tmux switch-client -t "$session_name"
+fi
