@@ -46,6 +46,26 @@ This will:
 - Configure SSH for Ghostty compatibility
 
 ---
+### Dev vs Prod Bootstrapping
+
+The bootstrap script automatically detects if the machine is a DEV machine or a PROD machine based on hostname.
+
+- DEV machines will get fancy configs like Powerlevel10k and fonts.
+- PROD machines will stay minimal.
+
+You can force dev mode by running:
+
+```bash
+FORCE_DEV_MACHINE=true ./bootstrap.sh
+```
+### Nix Tool Installation
+
+If you have Nix installed, you can install all required tools quickly:
+
+```bash
+./nix-install-tools.sh
+```
+---
 
 ### SSH Config Note
 
