@@ -11,6 +11,7 @@ __pycache__/
 .terraform/
 node_modules/
 ssh/config
+*.local
 
 # Ignore downloaded tool archives and unpacked directories
 *.tar.gz
