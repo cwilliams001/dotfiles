@@ -1,5 +1,9 @@
 # ~/.zshrc
 
+# Source ~/.zshrc.local
+source ~/.zshrc.local
+
+
 # 🚀 Zsh Shell Config — Lean, Fast, Portable
 
 # If coming from bash, you might need to fix your PATH
@@ -31,6 +35,7 @@ export FZF_DEFAULT_OPTS="--height 50% --layout=reverse --border --inline-info"
 
 # Make fzf available if installed
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
 
 # Setup zoxide (smart cd)
 eval "$(zoxide init zsh)"
