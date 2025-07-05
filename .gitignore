@@ -12,3 +12,13 @@ __pycache__/
 node_modules/
 ssh/config
 
+# Ignore downloaded tool archives and unpacked directories
+*.tar.gz
+*.zip
+*.deb
+ansible/fd-*/
+ansible/fzf-*/
+ansible/tmux-*/
+ansible/nvim-*/
+ansible/ghostty-*/
+

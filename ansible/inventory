@@ -1,3 +1,2 @@
 [remote-dev]
-ansible@claude-code
-ansible@nix-dev
+localhost ansible_connection=local

@@ -1,131 +1,82 @@
 
-# 🚀 Dotfiles — Terminal + Development Workflow
+# 🚀 Development Environment Setup
 
-## Overview
+This repository contains everything needed to set up a consistent development environment. It uses Ansible to automate the installation and configuration of all tools.
 
-This repository contains my modular setup for:
+## Quick Start
 
-- Terminal work using **Ghostty**
-- Multiplexed sessions using **tmux**
-- Fast file finding with **fd** and **fzf**
-- Smarter navigation using **zoxide**
-- Code editing with **Neovim**
-- Automated remote workflows using **tmux-sessionizer** and custom functions
+1.  **Clone this repository:**
+    ```bash
+    git clone <your-repo-url>
+    cd dotfiles
+    ```
 
-The goal is to create a **fast**, **repeatable**, and **sane** environment for both local and remote development.
+2.  **Run the setup script:**
+    ```bash
+    ./setup-remote-dev.sh
+    ```
+    This script will ensure Ansible is installed and then run the main playbook to set up your environment.
 
----
+3.  **Restart your shell:**
+    ```bash
+    exec zsh
+    ```
 
-## 📦 Included Tools
+## What Gets Installed
 
-| Tool      | Purpose                   |
-|-----------|----------------------------|
-| Ghostty   | Terminal emulator           |
-| Tmux      | Persistent terminal sessions |
-| fzf       | Fuzzy finder                |
-| fd        | Simple, fast file finding   |
-| zoxide    | Smarter cd (jump directories) |
-| Neovim    | Modern text editor          |
+### Core Tools
+*   **tmux**: Terminal multiplexer
+*   **Neovim**: Modern text editor
+*   **fd**: A fast and user-friendly alternative to `find`
+*   **fzf**: A command-line fuzzy finder
+*   **zoxide**: A smarter `cd` command
+*   **Ghostty**: A GPU-accelerated terminal emulator (GUI, best-effort installation)
 
----
+### Shell Environment
+*   **zsh**: As the default shell
+*   **Oh My Zsh**: A framework for managing your zsh configuration
+*   **Powerlevel10k**: A fast and flexible theme for zsh
+*   **zsh-autosuggestions** & **zsh-syntax-highlighting**: Essential plugins for a better shell experience
 
-## ⚡ Installation
+## How It Works
 
-After cloning:
+The setup is orchestrated by Ansible, with the main playbook located at `ansible/setup-dev-tools.yml`. This playbook is the single source of truth for the entire setup.
+
+### Updating Tools
+
+To update a tool, simply change its version number in the `vars` section at the top of `ansible/setup-dev-tools.yml` and re-run the setup script:
 
 ```bash
-cd ~/dotfiles
-./bootstrap.sh
+./setup-remote-dev.sh
 ```
 
-This will:
+The playbook is idempotent, so it will only change what's necessary.
 
-- Symlink configs into place
-- Install necessary tools (if using apt)
-- Set up zsh functions and tmux keybindings
-- Configure SSH for Ghostty compatibility
+### Symlinks
 
----
-### Dev vs Prod Bootstrapping
+The playbook automatically creates symlinks for your configuration files:
+- `~/.tmux.conf` → `tmux/tmux.conf`
+- `~/.zshrc` → `zsh/zshrc`
+- `~/.config/nvim/` → `nvim/`
+- `~/.config/ghostty/` → `config/ghostty/`
 
-The bootstrap script automatically detects if the machine is a DEV machine or a PROD machine based on hostname.
+### Custom Scripts
 
-- DEV machines will get fancy configs like Powerlevel10k and fonts.
-- PROD machines will stay minimal.
+-   `tmux-sessionizer`: A script for quick project switching in tmux. It's automatically linked to `~/.local/bin/tmux-sessionizer` and added to your `PATH`.
 
-You can force dev mode by running:
+## Directory Structure
 
-```bash
-FORCE_DEV_MACHINE=true ./bootstrap.sh
 ```
-### Nix Tool Installation
-
-If you have Nix installed, you can install all required tools quickly:
-
-```bash
-./nix-install-tools.sh
-```
----
-
-### SSH Config Note
-
-This repo provides an `ssh/config.example` file.  
-Please copy it manually:
-
-```bash
-cp ssh/config.example ssh/config
-```
----
-
-## 🧠 Core Workflows
-
-### Local Development
-
-| Task                    | Command / Keybind        |
-|--------------------------|---------------------------|
-| Start new tmux session    | `<prefix> + F` (sessionizer) |
-| Move between panes (vim keys) | `<prefix> + h/j/k/l` |
-| Find files (fzf)          | `Ctrl+T`                  |
-| Smart jump to dir + edit  | `v`                       |
-
-### Remote Development
-
-| Task                    | Command / Keybind        |
-|--------------------------|---------------------------|
-| SSH with auto-tmux attach | `ssht <host>`             |
-| Remote workspace         | `remote-workspace <host>` |
-| Remote edit file         | `remote-edit <host> <file>` |
-| Sync project to remote   | `sync-to-remote <host>`   |
-
----
-
-## 🛠 Future Improvements
-
-- (Optional) Migrate tool installation to **Nix** for freshest versions
-- Add a lightweight `shell.nix` for remote servers
-- Expand Ansible playbook for server bootstrap
-
----
-
-## 📂 Directory Structure
-
-
-```bash
 dotfiles/
 ├── ansible/
-│   └── setup-dev-tools.yml
+│   └── setup-dev-tools.yml  # The core playbook
 ├── bin/
 │   └── tmux-sessionizer
 ├── config/
 │   └── ghostty/
-│       └── config
+├── nvim/
 ├── tmux/
-│   └── tmux.conf
 ├── zsh/
-│   ├── functions.zsh
-│   └── zshrc
-├── ssh/
-│   └── config
-├── bootstrap.sh
+├── setup-remote-dev.sh      # Main setup script
 └── README.md
 ```
